@@ -18,7 +18,7 @@ impl Buckets {
             count,
             bucket_size,
             data: vec![0; (count * usize::from(bucket_size) + 7) / 8],
-            max: (1 << bucket_size) - 1,
+            max: ((1u16 << u16::from(bucket_size)) - 1) as u8,
         }
     }
 
@@ -36,16 +36,13 @@ impl Buckets {
     // The value is clamped to zero and the maximum bucket value.
     // Returns itself to allow for chaining.
     pub fn decrease(&mut self, bucket: usize, delta: u8) -> &Self {
-        let val = (self.get_bits(
-            bucket * usize::from(self.bucket_size),
-            usize::from(self.bucket_size),
-        ) as u8)
+        let val = (self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8)
             .saturating_sub(delta);
 
         self.set_bits(
             (bucket as u32) * u32::from(self.bucket_size),
-            u32::from(self.bucket_size),
-            u32::from(val),
+            self.bucket_size,
+            val,
         );
         self
     }
@@ -54,17 +51,14 @@ impl Buckets {
     // The value is clamped to zero and the maximum bucket value.
     // Returns itself to allow for chaining.
     pub fn increment(&mut self, bucket: usize, delta: u8) -> &Self {
-        let val = (self.get_bits(
-            bucket * usize::from(self.bucket_size),
-            usize::from(self.bucket_size),
-        ) as u8)
+        let val = (self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8)
             .saturating_add(delta)
             .min(self.max);
 
         self.set_bits(
             (bucket as u32) * u32::from(self.bucket_size),
-            u32::from(self.bucket_size),
-            u32::from(val),
+            self.bucket_size,
+            val,
         );
         self
     }
@@ -72,25 +66,19 @@ impl Buckets {
     // Set the bucket value. The value is clamped to zero and the maximum
     // bucket value. Returns itself to allow for chaining.
     pub fn set(&mut self, bucket: usize, value: u8) -> &Self {
-        let mut value = value;
-        if value > self.max {
-            value = self.max
-        }
+        let value = value.min(self.max);
 
         self.set_bits(
             (bucket as u32) * u32::from(self.bucket_size),
-            u32::from(self.bucket_size),
-            u32::from(value),
+            self.bucket_size,
+            value,
         );
         self
     }
 
     // Returns the value in the specified bucket.
-    pub fn get(&self, bucket: usize) -> u32 {
-        self.get_bits(
-            bucket * usize::from(self.bucket_size),
-            usize::from(self.bucket_size),
-        )
+    pub fn get(&self, bucket: usize) -> u8 {
+        self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8
     }
 
     // Reset restores the Buckets to the original state.
@@ -101,12 +89,13 @@ impl Buckets {
     }
 
     // Returns the bits at the specified offset and length.
-    fn get_bits(&self, offset: usize, length: usize) -> u32 {
+    fn get_bits(&self, offset: usize, length: u8) -> u32 {
         let byte_index = offset / 8;
         let byte_offset = offset % 8;
-        if byte_offset + length > 8 {
-            let rem = 8 - byte_offset;
-            return self.get_bits(offset, rem) | (self.get_bits(offset + rem, length - rem) << rem);
+        if byte_offset as u8 + length > 8 {
+            let rem = 8 - byte_offset as u8;
+            return self.get_bits(offset, rem)
+                | (self.get_bits(offset + rem as usize, length - rem) << rem);
         }
 
         let bit_mask = (1 << length) - 1;
@@ -115,21 +104,22 @@ impl Buckets {
     }
 
     // setBits sets bits at the specified offset and length.
-    fn set_bits(&mut self, offset: u32, length: u32, bits: u32) {
+    fn set_bits(&mut self, offset: u32, length: u8, bits: u8) {
         let byte_index = offset / 8;
         let byte_offset = offset % 8;
-        if byte_offset + length > 8 {
-            let rem = 8 - byte_offset;
+        if byte_offset as u8 + length > 8 {
+            let rem = 8 - byte_offset as u8;
             self.set_bits(offset, rem, bits);
-            self.set_bits(offset + rem, length - rem, bits >> rem);
+            self.set_bits(offset + u32::from(rem), length - rem, bits >> rem);
             return;
         }
 
         let bit_mask: u32 = (1 << length) - 1;
         self.data[byte_index as usize] =
             (u32::from(self.data[byte_index as usize]) & !(bit_mask << byte_offset)) as u8;
-        self.data[byte_index as usize] =
-            (u32::from(self.data[byte_index as usize]) | ((bits & bit_mask) << byte_offset)) as u8;
+        self.data[byte_index as usize] = (u32::from(self.data[byte_index as usize])
+            | ((u32::from(bits) & bit_mask) << byte_offset))
+            as u8;
     }
 }
 
@@ -157,6 +147,7 @@ mod tests {
     // Set sets the bucket value correctly.
     #[test]
     fn test_buckets_increment_decrease_and_get_and_set() {
+        // bucket_size = 2
         let mut b = Buckets::new(5, 2);
 
         let _b = b.increment(0, 1);
@@ -167,6 +158,34 @@ mod tests {
 
         let _b = b.set(2, 100);
         assert_eq!(b.get(2), 3);
+
+        let _b = b.increment(3, 2);
+        assert_eq!(b.get(3), 2);
+        // bucket_size = 3
+        let mut b = Buckets::new(5, 3);
+
+        let _b = b.increment(0, 1);
+        assert_eq!(b.get(0), 1);
+
+        let _b = b.decrease(1, 1);
+        assert_eq!(b.get(1), 0);
+
+        let _b = b.set(2, 100);
+        assert_eq!(b.get(2), 7);
+
+        let _b = b.increment(3, 2);
+        assert_eq!(b.get(3), 2);
+        // bucket_size = 8
+        let mut b = Buckets::new(5, 8);
+
+        let _b = b.increment(0, 1);
+        assert_eq!(b.get(0), 1);
+
+        let _b = b.decrease(1, 1);
+        assert_eq!(b.get(1), 0);
+
+        let _b = b.set(2, 255);
+        assert_eq!(b.get(2), 255);
 
         let _b = b.increment(3, 2);
         assert_eq!(b.get(3), 2);
