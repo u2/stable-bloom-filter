@@ -21,7 +21,7 @@ pub(crate) fn optimal_k(fp_rate: f64) -> usize {
 pub(crate) fn optimal_stable_p(m: usize, k: usize, d: u8, fp_rate: f64) -> usize {
     let max = (2_u64.pow(u32::from(d)) - 1) as f64;
     let sub_denom = (1.0 - fp_rate.powf(1.0 / (k as f64))).powf(1.0 / max);
-    let denom = (1.0 / sub_denom - 1.0) * (1.0 / k as f64 - 1.0 - m as f64);
+    let denom = (1.0 / sub_denom - 1.0) * (1.0 / (k as f64) - 1.0 / (m as f64));
 
     let mut p = (1.0 / denom) as usize;
 

@@ -214,6 +214,7 @@ impl Filter for StableBloomFilter {
 
         // Randomly decrement p cells to make room for new elements.
         self.decrement();
+        // Set the K cells to max.
         for i in self.index_buffer.iter() {
             self.cells.set(*i, self.max);
         }
@@ -241,8 +242,6 @@ mod tests {
         round / pow
     }
 
-
-
     // Ensures that new_unstable creates a Stable Bloom Filter with p=0,
     // max=1 and k hash functions.
     #[test]
@@ -254,9 +253,7 @@ mod tests {
         assert_eq!(f.m, 100);
         assert_eq!(f.p(), 0);
         assert_eq!(f.max(), 1);
-
     }
-
 
     // Ensures that Cells returns the number of cells, m, in the Stable Bloom
     // Filter.
@@ -274,7 +271,6 @@ mod tests {
         let f = StableBloomFilter::new(100, 1, 0.01);
         assert_eq!(f.k(), 3);
     }
-
 
     // Ensures that Test, Add, and TestAndAdd behave correctly.
     #[test]
@@ -301,7 +297,6 @@ mod tests {
         // `a` should have been evicted.
         assert!(!f.test("a".as_bytes()));
     }
-
 
     // Ensures that StablePoint returns the expected fraction of zeros for large
     // iterations.
