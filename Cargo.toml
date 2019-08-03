@@ -8,3 +8,4 @@ description = "A Rust-implementation of a stable Bloom filter for filtering dupl
 repository = "https://github.com/u2/stable-bloom-filter"
 
 [dependencies]
+rand = "0.7"
