@@ -9,3 +9,14 @@ repository = "https://github.com/u2/stable-bloom-filter"
 
 [dependencies]
 rand = "0.7"
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "buckets"
+harness = false
+
+[[bench]]
+name = "stable"
+harness = false
