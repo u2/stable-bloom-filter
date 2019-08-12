@@ -1,5 +1,5 @@
-use stable_bloom_filter::buckets::Buckets;
 use criterion::{criterion_group, criterion_main, Criterion, Fun};
+use stable_bloom_filter::buckets::Buckets;
 
 fn bench(c: &mut Criterion) {
     let increment = Fun::new("Increment", |b, _| {

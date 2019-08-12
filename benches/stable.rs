@@ -1,5 +1,5 @@
-use stable_bloom_filter::stable::StableBloomFilter;
 use criterion::{criterion_group, criterion_main, Criterion, Fun};
+use stable_bloom_filter::stable::StableBloomFilter;
 use stable_bloom_filter::Filter;
 
 fn bench(c: &mut Criterion) {
@@ -87,7 +87,14 @@ fn bench(c: &mut Criterion) {
         })
     });
 
-    let functions = vec![add, test, test_and_add, unstable_add, unstable_test, unstable_test_and_add];
+    let functions = vec![
+        add,
+        test,
+        test_and_add,
+        unstable_add,
+        unstable_test,
+        unstable_test_and_add,
+    ];
     c.bench_functions("StableBloomFilter", functions, 0);
 }
 
