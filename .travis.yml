@@ -19,16 +19,16 @@ matrix:
         - cargo fmt --version || travis_retry rustup component add rustfmt
         - cargo clippy --version || travis_retry rustup component add clippy
       script:
-        - git diff-index --check --cached $$(git rev-parse --verify master 2>/dev/null || echo "1e9e43b42759e784e18c61fabaae6f9ab2dc20b7") --
-        - cargo fmt --all -- --check
-        - cargo clippy --all --all-targets --all-features
+        - make check-whitespaces
+        - make fmt
+        - make clippy
     - name: Test on macOS
       os: osx
       env: CACHE_NAME=Test
       script:
-        - cargo test --all --all-targets --all-features
+        - make test
     - name: Test on macOS
       os: osx
       env: CACHE_NAME=Test
       script:
-        - cargo test --all --all-targets --all-features
+        - make test
