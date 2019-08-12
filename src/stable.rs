@@ -228,6 +228,8 @@ mod tests {
     use super::StableBloomFilter;
     use crate::optimal_k;
     use crate::Filter;
+    use float_cmp::ApproxEq;
+    use std::f64;
 
     fn round(val: f64, round_on: f64, places: usize) -> f64 {
         let pow = (10.0_f64).powf(places as f64);
@@ -275,27 +277,27 @@ mod tests {
     // Ensures that Test, Add, and TestAndAdd behave correctly.
     #[test]
     fn test_test_and_add() {
-        let mut f = StableBloomFilter::new_default(10000, 0.01);
-        assert!(!f.test("a".as_bytes()));
+        let mut f = StableBloomFilter::new_default(10_000, 0.01);
+        assert!(!f.test(b"a"));
 
-        f.add("a".as_bytes());
-        assert!(f.test("a".as_bytes()));
+        f.add(b"a");
+        assert!(f.test(b"a"));
 
-        assert!(f.test_and_add("a".as_bytes()));
+        assert!(f.test_and_add(b"a"));
 
-        assert!(!f.test_and_add("b".as_bytes()));
-        assert!(f.test("a".as_bytes()));
+        assert!(!f.test_and_add(b"b"));
+        assert!(f.test(b"a"));
 
-        assert!(f.test("b".as_bytes()));
+        assert!(f.test(b"b"));
 
-        assert!(!f.test("c".as_bytes()));
+        assert!(!f.test(b"c"));
 
-        for i in 0..1000000 {
+        for i in 0..1_000_000 {
             f.test_and_add(i.to_string().as_bytes());
         }
 
         // `a` should have been evicted.
-        assert!(!f.test("a".as_bytes()));
+        assert!(!f.test(b"a"));
     }
 
     // Ensures that StablePoint returns the expected fraction of zeros for large
@@ -303,7 +305,7 @@ mod tests {
     #[test]
     fn test_stable_point() {
         let mut f = StableBloomFilter::new(1000, 1, 0.1);
-        for i in 0..1000000 {
+        for i in 0..1_000_000 {
             f.add(i.to_string().as_bytes());
         }
 
@@ -314,14 +316,14 @@ mod tests {
             }
         }
 
-        let actual = round((zero as f64) / (f.m as f64), 0.5, 1);
+        let actual = round(f64::from(zero) / (f.m as f64), 0.5, 1);
         let expected = round(f.stable_point(), 0.5, 1);
 
-        assert_eq!(actual, expected);
+        assert!(actual.approx_eq(expected, (f64::EPSILON, 1)));
         // A classic Bloom filter is a special case of SBF where P is 0 and max is
         // 1. It doesn't have a stable point.
         let bf = StableBloomFilter::new_unstable(1000, 0.1);
-        assert_eq!(bf.stable_point(), 0.0);
+        assert!(bf.stable_point().approx_eq(0.0, (f64::EPSILON, 1)));
     }
 
     // Ensures that FalsePositiveRate returns the upper bound on false positives
@@ -331,12 +333,12 @@ mod tests {
         let f = StableBloomFilter::new_default(1000, 0.01);
         let fps = round(f.false_positive_rate(), 0.5, 2);
 
-        assert_eq!(fps, 0.01);
+        assert!(fps.approx_eq(0.01, (f64::EPSILON, 1)));
 
         // Classic Bloom filters have an unbounded rate of false positives. Once
         // they become full, every query returns a false positive.
         let bf = StableBloomFilter::new_unstable(1000, 0.1);
-        assert_eq!(bf.false_positive_rate(), 1.0);
+        assert!(bf.false_positive_rate().approx_eq(1.0, (f64::EPSILON, 1)));
     }
 
     // Ensures that Reset sets every cell to zero.

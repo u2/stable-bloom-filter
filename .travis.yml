@@ -1,0 +1,34 @@
+language: rust
+rust: 1.36.0
+dist: xenial
+sudo: true
+cache:
+  directories:
+    - $HOME/.cargo
+  timeout: 1024
+
+before_cache:
+  - rm -rf $HOME/.cargo/registry
+
+matrix:
+  include:
+    - name: Linter on macOS
+      os: osx
+      env: CACHE_NAME=linters
+      install:
+        - cargo fmt --version || travis_retry rustup component add rustfmt
+        - cargo clippy --version || travis_retry rustup component add clippy
+      script:
+        - make check-whitespaces
+        - make fmt
+        - make clippy
+    - name: Test on macOS
+      os: osx
+      env: CACHE_NAME=Test
+      script:
+        - make test
+    - name: Test on macOS
+      os: osx
+      env: CACHE_NAME=Test
+      script:
+        - make test
