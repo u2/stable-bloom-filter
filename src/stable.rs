@@ -1,27 +1,3 @@
-// StableBloomFilter implements a Stable Bloom Filter as described by Deng and
-// Rafiei in Approximately Detecting Duplicates for Streaming Data using Stable
-// Bloom Filters:
-//
-// http://webdocs.cs.ualberta.ca/~drafiei/papers/DupDet06Sigmod.pdf
-//
-// A Stable Bloom Filter (SBF) continuously evicts stale information so that it
-// has room for more recent elements. Like traditional Bloom filters, an SBF
-// has a non-zero probability of false positives, which is controlled by
-// several parameters. Unlike the classic Bloom filter, an SBF has a tight
-// upper bound on the rate of false positives while introducing a non-zero rate
-// of false negatives. The false-positive rate of a classic Bloom filter
-// eventually reaches 1, after which all queries result in a false positive.
-// The stable-point property of an SBF means the false-positive rate
-// asymptotically approaches a configurable fixed constant. A classic Bloom
-// filter is actually a special case of SBF where the eviction rate is zero, so
-// this package provides support for them as well.
-//
-// Stable Bloom Filters are useful for cases where the size of the data set
-// isn't known a priori, which is a requirement for traditional Bloom filters,
-// and memory is bounded.  For example, an SBF can be used to deduplicate
-// events from an unbounded event stream with a specified upper bound on false
-// positives and minimal false negatives.
-
 use crate::buckets::Buckets;
 use crate::fnv::FnvHasher;
 use crate::Filter;
@@ -30,26 +6,26 @@ use rand::{thread_rng, Rng};
 use std::hash::Hasher;
 
 pub struct StableBloomFilter {
-    // filter data
+    /// filter data
     cells: Buckets,
-    // hash function (kernel for all k functions)
+    /// hash function (kernel for all k functions)
     hash: FnvHasher,
-    // number of cells
+    /// number of cells
     m: usize,
-    // number of cells to decrement
+    /// number of cells to decrement
     p: usize,
-    // number of hash functions
+    /// number of hash functions
     k: usize,
-    // cell max value
+    /// cell max value
     max: u8,
-    // buffer used to cache indices
+    /// buffer used to cache indices
     index_buffer: Vec<usize>,
 }
 
 impl StableBloomFilter {
-    // Creates a new Stable Bloom Filter with m cells and d
-    // bits allocated per cell optimized for the target false-positive rate. Use
-    // default if you don't want to calculate d.
+    /// Creates a new Stable Bloom Filter with m cells and d
+    /// bits allocated per cell optimized for the target false-positive rate. Use
+    /// default if you don't want to calculate d.
     pub fn new(m: usize, d: u8, fp_rate: f64) -> Self {
         let mut k = optimal_k(fp_rate) / 2;
         if k > m {
@@ -71,18 +47,18 @@ impl StableBloomFilter {
         }
     }
 
-    // Creates a new Stable Bloom Filter with m 1-bit
-    // cells and which is optimized for cases where there is no prior knowledge of
-    // the input data stream while maintaining an upper bound using the provided
-    // rate of false positives.
+    /// Creates a new Stable Bloom Filter with m 1-bit
+    /// cells and which is optimized for cases where there is no prior knowledge of
+    /// the input data stream while maintaining an upper bound using the provided
+    /// rate of false positives.
     pub fn new_default(m: usize, fp_rate: f64) -> Self {
         Self::new(m, 1, fp_rate)
     }
 
-    // NewUnstableBloomFilter creates a new special case of Stable Bloom Filter
-    // which is a traditional Bloom filter with m bits and an optimal number of
-    // hash functions for the target false-positive rate. Unlike the stable
-    // variant, data is not evicted and a cell contains a maximum of 1 hash value.
+    /// NewUnstableBloomFilter creates a new special case of Stable Bloom Filter
+    /// which is a traditional Bloom filter with m bits and an optimal number of
+    /// hash functions for the target false-positive rate. Unlike the stable
+    /// variant, data is not evicted and a cell contains a maximum of 1 hash value.
     pub fn new_unstable(m: usize, fp_rate: f64) -> Self {
         let cells = Buckets::new(m, 1);
         let k = optimal_k(fp_rate);
@@ -98,17 +74,17 @@ impl StableBloomFilter {
         }
     }
 
-    // Returns the number of cells in the Stable Bloom Filter.
+    /// Returns the number of cells in the Stable Bloom Filter.
     pub fn cells(&self) -> usize {
         self.m
     }
 
-    // Returns the number of hash functions.
+    /// Returns the number of hash functions.
     pub fn k(&self) -> usize {
         self.k
     }
 
-    // Returns the number of cells decremented on every add.
+    /// Returns the number of cells decremented on every add.
     pub fn p(&self) -> usize {
         self.p
     }
@@ -117,9 +93,9 @@ impl StableBloomFilter {
         self.max
     }
 
-    // Returns the limit of the expected fraction of zeros in the
-    // Stable Bloom Filter when the number of iterations goes to infinity. When
-    // this limit is reached, the Stable Bloom Filter is considered stable.
+    /// Returns the limit of the expected fraction of zeros in the
+    /// Stable Bloom Filter when the number of iterations goes to infinity. When
+    /// this limit is reached, the Stable Bloom Filter is considered stable.
     pub fn stable_point(&self) -> f64 {
         let sub_denom = (self.p as f64) * ((1.0 / (self.k as f64)) - (1.0 / (self.m as f64)));
         let denom = 1.0 + 1.0 / sub_denom;
@@ -128,8 +104,8 @@ impl StableBloomFilter {
         base.powf(f64::from(self.max))
     }
 
-    // Returns the upper bound on false positives when the filter
-    // has become stable.
+    /// Returns the upper bound on false positives when the filter
+    /// has become stable.
     pub fn false_positive_rate(&self) -> f64 {
         (1.0 - self.stable_point()).powf(self.k as f64)
     }
@@ -143,17 +119,17 @@ impl StableBloomFilter {
         (lower, upper)
     }
 
-    // Restores the Stable Bloom Filter to its original state. It returns the
-    // filter to allow for chaining.
+    /// Restores the Stable Bloom Filter to its original state. It returns the
+    /// filter to allow for chaining.
     pub fn reset(&mut self) -> &Self {
         self.cells.reset();
         self
     }
 
-    // Will decrement a random cell and (p-1) adjacent cells by 1. This
-    // is faster than generating p random numbers. Although the processes of
-    // picking the p cells are not independent, each cell has a probability of p/m
-    // for being picked at each iteration, which means the properties still hold.
+    /// Will decrement a random cell and (p-1) adjacent cells by 1. This
+    /// is faster than generating p random numbers. Although the processes of
+    /// picking the p cells are not independent, each cell has a probability of p/m
+    /// for being picked at each iteration, which means the properties still hold.
     pub fn decrement(&mut self) {
         let mut rng = thread_rng();
         let r: usize = rng.gen_range(0, self.m);
@@ -166,9 +142,9 @@ impl StableBloomFilter {
 }
 
 impl Filter for StableBloomFilter {
-    // Will test for membership of the data and returns true if it is a
-    // member, false if not. This is a probabilistic test, meaning there is a
-    // non-zero probability of false positives and false negatives.
+    /// Will test for membership of the data and returns true if it is a
+    /// member, false if not. This is a probabilistic test, meaning there is a
+    /// non-zero probability of false positives and false negatives.
     fn test(&self, data: &[u8]) -> bool {
         let (lower, upper) = self.hash_kernel(data);
         for i in 0..(self.k) {
@@ -183,8 +159,8 @@ impl Filter for StableBloomFilter {
         true
     }
 
-    // Will add the data to the Stable Bloom Filter. It returns the filter to
-    // allow for chaining.
+    /// Will add the data to the Stable Bloom Filter. It returns the filter to
+    /// allow for chaining.
     fn add(&mut self, data: &[u8]) -> &Self {
         // Randomly decrement p cells to make room for new elements.
         self.decrement();
@@ -198,8 +174,8 @@ impl Filter for StableBloomFilter {
         self
     }
 
-    // Is equivalent to calling Test followed by Add. It returns true if
-    // the data is a member, false if not.
+    /// Is equivalent to calling Test followed by Add. It returns true if
+    /// the data is a member, false if not.
     fn test_and_add(&mut self, data: &[u8]) -> bool {
         let (lower, upper) = self.hash_kernel(data);
         let mut member = true;

@@ -1,5 +1,5 @@
-// Buckets is a fast, space-efficient array of buckets where each bucket can
-// store up to a configured maximum value.
+/// Buckets is a fast, space-efficient array of buckets where each bucket can
+/// store up to a configured maximum value.
 pub struct Buckets {
     data: Vec<u8>,
     bucket_size: u8,
@@ -8,8 +8,8 @@ pub struct Buckets {
 }
 
 impl Buckets {
-    // Creates a new Buckets with the provided number of buckets where
-    // each bucket is the specified number of bits.
+    /// Creates a new Buckets with the provided number of buckets where
+    /// each bucket is the specified number of bits.
     pub fn new(count: usize, bucket_size: u8) -> Self {
         if bucket_size > 8 {
             panic!("max bucket_size is 8");
@@ -22,19 +22,19 @@ impl Buckets {
         }
     }
 
-    // Returns the maximum value that can be stored in a bucket.
+    /// Returns the maximum value that can be stored in a bucket.
     pub fn max_bucket_value(&self) -> u8 {
         self.max
     }
 
-    // Returns the number of buckets.
+    /// Returns the number of buckets.
     pub fn count(&self) -> usize {
         self.count
     }
 
-    // Decrease the value in the specified bucket by the provided delta.
-    // The value is clamped to zero and the maximum bucket value.
-    // Returns itself to allow for chaining.
+    /// Decrease the value in the specified bucket by the provided delta.
+    /// The value is clamped to zero and the maximum bucket value.
+    /// Returns itself to allow for chaining.
     pub fn decrease(&mut self, bucket: usize, delta: u8) -> &Self {
         let val = (self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8)
             .saturating_sub(delta);
@@ -47,9 +47,9 @@ impl Buckets {
         self
     }
 
-    // Increment the value in the specified bucket by the provided delta.
-    // The value is clamped to zero and the maximum bucket value.
-    // Returns itself to allow for chaining.
+    /// Increment the value in the specified bucket by the provided delta.
+    /// The value is clamped to zero and the maximum bucket value.
+    /// Returns itself to allow for chaining.
     pub fn increment(&mut self, bucket: usize, delta: u8) -> &Self {
         let val = (self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8)
             .saturating_add(delta)
@@ -63,8 +63,8 @@ impl Buckets {
         self
     }
 
-    // Set the bucket value. The value is clamped to zero and the maximum
-    // bucket value. Returns itself to allow for chaining.
+    /// Set the bucket value. The value is clamped to zero and the maximum
+    /// bucket value. Returns itself to allow for chaining.
     pub fn set(&mut self, bucket: usize, value: u8) -> &Self {
         let value = value.min(self.max);
 
@@ -76,19 +76,19 @@ impl Buckets {
         self
     }
 
-    // Returns the value in the specified bucket.
+    /// Returns the value in the specified bucket.
     pub fn get(&self, bucket: usize) -> u8 {
         self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8
     }
 
-    // Reset restores the Buckets to the original state.
-    // Returns itself to allow for chaining.
+    /// Reset restores the Buckets to the original state.
+    /// Returns itself to allow for chaining.
     pub fn reset(&mut self) -> &Self {
         self.data = vec![0; (self.count * usize::from(self.bucket_size) + 7) / 8];
         self
     }
 
-    // Returns the bits at the specified offset and length.
+    /// Returns the bits at the specified offset and length.
     fn get_bits(&self, offset: usize, length: u8) -> u32 {
         let byte_index = offset / 8;
         let byte_offset = offset % 8;
@@ -103,7 +103,7 @@ impl Buckets {
             >> byte_offset
     }
 
-    // setBits sets bits at the specified offset and length.
+    /// setBits sets bits at the specified offset and length.
     fn set_bits(&mut self, offset: u32, length: u8, bits: u8) {
         let byte_index = offset / 8;
         let byte_offset = offset % 8;

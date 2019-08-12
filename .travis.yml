@@ -3,12 +3,13 @@ rust: 1.36.0
 dist: xenial
 sudo: true
 cache:
-  directories:
-    - $HOME/.cargo
+  cargo: true
   timeout: 1024
 
 before_cache:
   - rm -rf $HOME/.cargo/registry
+  - rm -rf ./target/debug/incremental/
+  - rm -rf ./target/release/incremental/
 
 matrix:
   include:
