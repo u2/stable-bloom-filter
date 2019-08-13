@@ -253,7 +253,7 @@ mod tests {
     // Ensures that Test, Add, and TestAndAdd behave correctly.
     #[test]
     fn test_test_and_add() {
-        let mut f = StableBloomFilter::new_default(10_000, 0.01);
+        let mut f = StableBloomFilter::new_default(1_000, 0.01);
         assert!(!f.test(b"a"));
 
         f.add(b"a");
