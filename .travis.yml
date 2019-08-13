@@ -6,6 +6,9 @@ cache:
   cargo: true
   timeout: 1024
 
+notifications:
+  email: false
+
 before_cache:
   - rm -rf $HOME/.cargo/registry
   - rm -rf ./target/debug/incremental/
