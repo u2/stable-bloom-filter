@@ -16,7 +16,7 @@ Stable Bloom Filters are useful for cases where the size of the data set isn't k
 ## Usage
 
 ```toml
-stable-bloom-filter = "0.2"
+stable-bloom-filter = "0.3"
 ```
 
 ```rust

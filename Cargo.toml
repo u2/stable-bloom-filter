@@ -1,6 +1,6 @@
 [package]
 name = "stable-bloom-filter"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["u2 <zhangyaning1985@gmail.com>"]
 edition = "2018"
 license = "MIT"
