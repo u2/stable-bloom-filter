@@ -35,6 +35,7 @@ impl Buckets {
     /// Decrease the value in the specified bucket by the provided delta.
     /// The value is clamped to zero and the maximum bucket value.
     /// Returns itself to allow for chaining.
+    #[inline]
     pub fn decrease(&mut self, bucket: usize, delta: u8) -> &Self {
         let val = (self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8)
             .saturating_sub(delta);
@@ -50,6 +51,7 @@ impl Buckets {
     /// Increment the value in the specified bucket by the provided delta.
     /// The value is clamped to zero and the maximum bucket value.
     /// Returns itself to allow for chaining.
+    #[inline]
     pub fn increment(&mut self, bucket: usize, delta: u8) -> &Self {
         let val = (self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8)
             .saturating_add(delta)
@@ -65,6 +67,7 @@ impl Buckets {
 
     /// Set the bucket value. The value is clamped to zero and the maximum
     /// bucket value. Returns itself to allow for chaining.
+    #[inline]
     pub fn set(&mut self, bucket: usize, value: u8) -> &Self {
         let value = value.min(self.max);
 
@@ -77,6 +80,7 @@ impl Buckets {
     }
 
     /// Returns the value in the specified bucket.
+    #[inline]
     pub fn get(&self, bucket: usize) -> u8 {
         self.get_bits(bucket * usize::from(self.bucket_size), self.bucket_size) as u8
     }
@@ -89,6 +93,7 @@ impl Buckets {
     }
 
     /// Returns the bits at the specified offset and length.
+    #[inline]
     fn get_bits(&self, offset: usize, length: u8) -> u32 {
         let byte_index = offset / 8;
         let byte_offset = offset % 8;
@@ -104,6 +109,7 @@ impl Buckets {
     }
 
     /// setBits sets bits at the specified offset and length.
+    #[inline]
     fn set_bits(&mut self, offset: u32, length: u8, bits: u8) {
         let byte_index = offset / 8;
         let byte_offset = offset % 8;
