@@ -110,6 +110,7 @@ impl StableBloomFilter {
         (1.0 - self.stable_point()).powf(self.k as f64)
     }
 
+    #[inline]
     pub fn hash_kernel(&self, data: &[u8]) -> (u32, u32) {
         let mut hasher = self.hash.clone();
         hasher.write(data);
@@ -130,6 +131,7 @@ impl StableBloomFilter {
     /// is faster than generating p random numbers. Although the processes of
     /// picking the p cells are not independent, each cell has a probability of p/m
     /// for being picked at each iteration, which means the properties still hold.
+    #[inline]
     pub fn decrement(&mut self) {
         let mut rng = thread_rng();
         let r: usize = rng.gen_range(0, self.m);
@@ -145,6 +147,7 @@ impl Filter for StableBloomFilter {
     /// Will test for membership of the data and returns true if it is a
     /// member, false if not. This is a probabilistic test, meaning there is a
     /// non-zero probability of false positives and false negatives.
+    #[inline]
     fn test(&self, data: &[u8]) -> bool {
         let (lower, upper) = self.hash_kernel(data);
         for i in 0..(self.k) {
@@ -161,6 +164,7 @@ impl Filter for StableBloomFilter {
 
     /// Will add the data to the Stable Bloom Filter. It returns the filter to
     /// allow for chaining.
+    #[inline]
     fn add(&mut self, data: &[u8]) -> &Self {
         // Randomly decrement p cells to make room for new elements.
         self.decrement();
@@ -176,6 +180,7 @@ impl Filter for StableBloomFilter {
 
     /// Is equivalent to calling Test followed by Add. It returns true if
     /// the data is a member, false if not.
+    #[inline]
     fn test_and_add(&mut self, data: &[u8]) -> bool {
         let (lower, upper) = self.hash_kernel(data);
         let mut member = true;

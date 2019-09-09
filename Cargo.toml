@@ -13,6 +13,7 @@ rand = "0.7"
 [dev-dependencies]
 criterion = "0.2"
 float-cmp = "0.5"
+rand = "0.7"
 
 [[bench]]
 name = "buckets"

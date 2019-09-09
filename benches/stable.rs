@@ -6,7 +6,7 @@ fn bench(c: &mut Criterion) {
     let add = Fun::new("Add", |b, _| {
         let mut s = StableBloomFilter::new_default(200, 0.01);
         let mut data = Vec::new();
-        for i in 0..1000 {
+        for i in 0..100_000 {
             data.push(i.to_string().into_bytes());
         }
 
@@ -20,7 +20,7 @@ fn bench(c: &mut Criterion) {
     let test = Fun::new("Test", |b, _| {
         let s = StableBloomFilter::new_default(200, 0.01);
         let mut data = Vec::new();
-        for i in 0..1000 {
+        for i in 0..100_000 {
             data.push(i.to_string().into_bytes());
         }
 
@@ -34,7 +34,7 @@ fn bench(c: &mut Criterion) {
     let test_and_add = Fun::new("TestAndAdd", |b, _| {
         let mut s = StableBloomFilter::new_default(200, 0.01);
         let mut data = Vec::new();
-        for i in 0..1000 {
+        for i in 0..100_000 {
             data.push(i.to_string().into_bytes());
         }
 
